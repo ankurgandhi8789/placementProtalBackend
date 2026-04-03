@@ -10,7 +10,6 @@ const schoolRoutes = require('./routes/schoolRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 
-// connectDB();
 
 const app = express();
 
@@ -19,6 +18,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/school', schoolRoutes);
