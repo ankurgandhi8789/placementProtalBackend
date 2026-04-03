@@ -2,39 +2,117 @@ const mongoose = require('mongoose');
 
 const educationSchema = new mongoose.Schema({
   degree: { type: String, required: true },
+  specialization: { type: String },
   institution: { type: String, required: true },
-  year: { type: String, required: true },
-  percentage: { type: String },
+  boardOrUniversity: { type: String },
+  yearOfPassing: { type: Number, required: true },
+  percentage: { type: Number, min: 0, max: 100 },
+});
+
+const experienceSchema = new mongoose.Schema({
+  schoolName: String,
+  role: String,
+  subject: String,
+  startDate: Date,
+  endDate: Date,
+  currentlyWorking: { type: Boolean, default: false },
 });
 
 const teacherProfileSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-    profilePhoto: { type: String },
-    profilePhotoFileId: { type: String },
-    phone: { type: String },
-    dateOfBirth: { type: Date },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+    },
+
+    // 👤 Basic
+    fullName: { type: String, required: true },
+    phone: { type: String, required: true },
+    alternatePhone: String,
+    email: String,
     gender: { type: String, enum: ['male', 'female', 'other'] },
-    address: { type: String },
-    city: { type: String },
-    state: { type: String },
+    dateOfBirth: Date,
+
+    // 📍 Address
+    currentAddress: { type: String, required: true },
+    permanentAddress: String,
+    city: String,
+    state: String,
+    pincode: String,
+
+    // 📚 Education
+    education: [educationSchema],
+
+    // 🎓 Teaching Qualification (IMPORTANT ADD)
+    teachingQualifications: [
+      { type: String, enum: ['B.Ed', 'D.El.Ed', 'Other'] },
+    ],
+
+    // 🎯 Teaching
     subjects: [{ type: String }],
     classLevels: [{ type: String }],
+    preferredLocations: [{ type: String }],
+
+    // 💼 Experience
     experienceYears: { type: Number, default: 0 },
-    experienceDetails: { type: String },
-    education: [educationSchema],
-    resume: { type: String },
-    resumeFileId: { type: String },
-    resumeOriginalName: { type: String },
-    expectedSalary: { type: String },
+    experienceDetails: String,
+    experiences: [experienceSchema],
+
+    // 📄 Files
+    profilePhoto: String,
+    profilePhotoFileId: String,
+
+    resume: String,
+    resumeFileId: String,
+    resumeOriginalName: String,
+
+    // 📊 Status
     currentStatus: {
       type: String,
-      enum: ['applied', 'contacted', 'test_scheduled', 'interview', 'assigned', 'completed', 'rejected'],
+      enum: [
+        'applied',
+        'contacted',
+        'test_scheduled',
+        'test_completed',
+        'interview_scheduled',
+        'interview_completed',
+        'assigned',
+        'completed',
+        'rejected',
+      ],
       default: 'applied',
     },
-    adminNotes: { type: String },
-    assignedSchool: { type: mongoose.Schema.Types.ObjectId, ref: 'SchoolProfile' },
+
+    statusHistory: [
+      {
+        status: String,
+        updatedAt: { type: Date, default: Date.now },
+        note: String,
+      },
+    ],
+
+    adminNotes: String,
+
+    // 🏫 Assignment
+    assignedSchool: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SchoolProfile',
+    },
+    assignedAt: Date,
+
+    // 📅 Scheduling
+    testDate: Date,
+    interviewDate: Date,
+
+    // ✅ Flags
+    isActive: { type: Boolean, default: true },
+    isVerified: { type: Boolean, default: false },
     isProfileComplete: { type: Boolean, default: false },
+
+    // 📜 Legal
+    termsAccepted: { type: Boolean, required: true },
   },
   { timestamps: true }
 );

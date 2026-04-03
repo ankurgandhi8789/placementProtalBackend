@@ -1,30 +1,54 @@
 const mongoose = require('mongoose');
 
-const requirementSchema = new mongoose.Schema({
-  subject: { type: String, required: true },
-  classLevel: { type: String, required: true },
+const vacancySchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: [
+      'PRT',
+      'TGT',
+      'PGT',
+      'PRT + TGT',
+      'TGT + PGT',
+      'PRT + TGT + PGT',
+      'Principal',
+      'Vice-Principal',
+      'Non-Teaching'
+    ],
+    required: true
+  },
+  numberOfPosts: { type: Number, required: true },
   salary: { type: String, required: true },
-  description: { type: String },
-  isActive: { type: Boolean, default: true },
-  filledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'TeacherProfile' },
 });
 
 const schoolProfileSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+
+    // Basic Info
     schoolName: { type: String, required: true },
-    logo: { type: String },
-    logoFileId: { type: String },
-    phone: { type: String },
-    email: { type: String },
-    address: { type: String },
+    directorContact: { type: String, required: true },
+
+    // Address
+    address: { type: String, required: true },
     city: { type: String },
     state: { type: String },
     pincode: { type: String },
-    schoolType: { type: String, enum: ['government', 'private', 'aided', 'international'] },
-    board: { type: String },
+
+    // Vacancies
+    vacancies: [vacancySchema],
+
+    // Facilities
+    accommodationProvided: { type: Boolean, required: true },
+    healthInsuranceProvided: { type: Boolean, required: true },
+
+    // Agreement
+    termsAccepted: { type: Boolean, required: true },
+
+    // Existing fields (optional keep)
+    phone: { type: String },
+    email: { type: String },
     website: { type: String },
-    requirements: [requirementSchema],
+
     isVerified: { type: Boolean, default: false },
     adminNotes: { type: String },
   },
