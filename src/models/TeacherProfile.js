@@ -28,15 +28,15 @@ const teacherProfileSchema = new mongoose.Schema(
     },
 
     // 👤 Basic
-    fullName: { type: String, required: true },
-    phone: { type: String, required: true },
+    fullName: { type: String },
+    phone: { type: String },
     alternatePhone: String,
     email: String,
     gender: { type: String, enum: ['male', 'female', 'other'] },
     dateOfBirth: Date,
 
     // 📍 Address
-    currentAddress: { type: String, required: true },
+    currentAddress: { type: String },
     permanentAddress: String,
     city: String,
     state: String,
@@ -112,7 +112,7 @@ const teacherProfileSchema = new mongoose.Schema(
     isProfileComplete: { type: Boolean, default: false },
 
     // 📜 Legal
-    termsAccepted: { type: Boolean, required: true },
+    termsAccepted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

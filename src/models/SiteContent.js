@@ -9,14 +9,6 @@ const sliderImageSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 });
 
-const bannerSchema = new mongoose.Schema({
-  url: { type: String, required: true },
-  fileId: { type: String },
-  title: { type: String },
-  position: { type: String, enum: ['top', 'middle', 'bottom'], default: 'top' },
-  isActive: { type: Boolean, default: true },
-});
-
 const vacancySchema = new mongoose.Schema({
   title: { type: String, required: true },
   subject: { type: String, required: true },
@@ -24,6 +16,8 @@ const vacancySchema = new mongoose.Schema({
   location: { type: String, required: true },
   salary: { type: String, required: true },
   description: { type: String },
+  image: { type: String },
+  imageFileId: { type: String },
   isActive: { type: Boolean, default: true },
   postedAt: { type: Date, default: Date.now },
 });
@@ -31,7 +25,6 @@ const vacancySchema = new mongoose.Schema({
 const siteContentSchema = new mongoose.Schema(
   {
     sliderImages: [sliderImageSchema],
-    banners: [bannerSchema],
     vacancies: [vacancySchema],
     stats: {
       happyClients: { type: Number, default: 500 },

@@ -26,10 +26,10 @@ const schoolProfileSchema = new mongoose.Schema(
 
     // Basic Info
     schoolName: { type: String, required: true },
-    directorContact: { type: String, required: true },
+    directorContact: { type: String },
 
     // Address
-    address: { type: String, required: true },
+    address: { type: String },
     city: { type: String },
     state: { type: String },
     pincode: { type: String },
@@ -38,11 +38,11 @@ const schoolProfileSchema = new mongoose.Schema(
     vacancies: [vacancySchema],
 
     // Facilities
-    accommodationProvided: { type: Boolean, required: true },
-    healthInsuranceProvided: { type: Boolean, required: true },
+    accommodationProvided: { type: Boolean, default: false },
+    healthInsuranceProvided: { type: Boolean, default: false },
 
     // Agreement
-    termsAccepted: { type: Boolean, required: true },
+    termsAccepted: { type: Boolean, default: false },
 
     // Existing fields (optional keep)
     phone: { type: String },

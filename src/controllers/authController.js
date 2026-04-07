@@ -11,9 +11,24 @@ const register = async (req, res, next) => {
   try {
     const { name, email, password, role, schoolName, phone } = req.body;
 
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
     const allowedRoles = ['teacher', 'school'];
     if (role && !allowedRoles.includes(role)) {
       return res.status(400).json({ message: 'Invalid role for registration' });
+    }
+
+    // Check if school name is provided for school role
+    if (role === 'school' && !schoolName) {
+      return res.status(400).json({ message: 'School name is required for school registration' });
     }
 
     const userExists = await User.findOne({ email });

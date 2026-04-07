@@ -173,7 +173,19 @@ const createAdmin = async (req, res, next) => {
     if (req.user.role !== 'superadmin') {
       return res.status(403).json({ message: 'Only superadmin can create admins' });
     }
+    
     const { name, email, password } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already exists' });
 
@@ -252,49 +264,6 @@ const deleteSliderImage = async (req, res, next) => {
   }
 };
 
-// @desc    Add banner
-// @route   POST /api/admin/content/banner
-const addBanner = async (req, res, next) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-
-    const result = await imagekit.upload({
-      file: req.file.buffer.toString('base64'),
-      fileName: `banner_${Date.now()}`,
-      folder: '/banners',
-    });
-
-    let content = await SiteContent.findOne();
-    if (!content) content = await SiteContent.create({});
-
-    content.banners.push({
-      url: result.url,
-      fileId: result.fileId,
-      title: req.body.title || '',
-      position: req.body.position || 'top',
-    });
-    await content.save();
-    res.status(201).json(content.banners[content.banners.length - 1]);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Delete banner
-// @route   DELETE /api/admin/content/banner/:bannerId
-const deleteBanner = async (req, res, next) => {
-  try {
-    const content = await SiteContent.findOne();
-    const banner = content.banners.id(req.params.bannerId);
-    if (banner?.fileId) await imagekit.deleteFile(banner.fileId).catch(() => {});
-    content.banners.pull({ _id: req.params.bannerId });
-    await content.save();
-    res.json({ message: 'Banner removed' });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // @desc    Update stats
 // @route   PUT /api/admin/content/stats
 const updateStats = async (req, res, next) => {
@@ -327,9 +296,42 @@ const updateContactInfo = async (req, res, next) => {
 // @route   POST /api/admin/content/vacancies
 const addVacancy = async (req, res, next) => {
   try {
+    // Validate required fields
+    if (!req.body.title || !req.body.subject || !req.body.classLevel || !req.body.location || !req.body.salary) {
+      return res.status(400).json({ message: 'Missing required fields: title, subject, classLevel, location, salary' });
+    }
+
     let content = await SiteContent.findOne();
     if (!content) content = await SiteContent.create({});
-    content.vacancies.push(req.body);
+    
+    const vacancyData = {
+      title: req.body.title,
+      subject: req.body.subject,
+      classLevel: req.body.classLevel,
+      location: req.body.location,
+      salary: req.body.salary,
+      description: req.body.description || '',
+      isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+    };
+    
+    // Handle image upload if file exists
+    if (req.file) {
+      try {
+        if (imagekit && typeof imagekit.upload === 'function' && process.env.IMAGEKIT_PUBLIC_KEY) {
+          const result = await imagekit.upload({
+            file: req.file.buffer.toString('base64'),
+            fileName: `vacancy_${Date.now()}`,
+            folder: '/vacancies',
+          });
+          vacancyData.image = result.url;
+          vacancyData.imageFileId = result.fileId;
+        }
+      } catch (imgError) {
+        // Continue without image
+      }
+    }
+    
+    content.vacancies.push(vacancyData);
     await content.save();
     res.status(201).json(content.vacancies[content.vacancies.length - 1]);
   } catch (error) {
@@ -344,7 +346,32 @@ const updateVacancy = async (req, res, next) => {
     const content = await SiteContent.findOne();
     const vacancy = content.vacancies.id(req.params.vacancyId);
     if (!vacancy) return res.status(404).json({ message: 'Vacancy not found' });
-    Object.assign(vacancy, req.body);
+    
+    // Update basic fields
+    if (req.body.title) vacancy.title = req.body.title;
+    if (req.body.subject) vacancy.subject = req.body.subject;
+    if (req.body.classLevel) vacancy.classLevel = req.body.classLevel;
+    if (req.body.location) vacancy.location = req.body.location;
+    if (req.body.salary) vacancy.salary = req.body.salary;
+    if (req.body.description !== undefined) vacancy.description = req.body.description;
+    if (req.body.isActive !== undefined) vacancy.isActive = req.body.isActive;
+    
+    // Handle image upload if file exists
+    if (req.file) {
+      // Delete old image if exists
+      if (vacancy.imageFileId) {
+        await imagekit.deleteFile(vacancy.imageFileId).catch(() => {});
+      }
+      
+      const result = await imagekit.upload({
+        file: req.file.buffer.toString('base64'),
+        fileName: `vacancy_${Date.now()}`,
+        folder: '/vacancies',
+      });
+      vacancy.image = result.url;
+      vacancy.imageFileId = result.fileId;
+    }
+    
     await content.save();
     res.json(vacancy);
   } catch (error) {
@@ -357,6 +384,13 @@ const updateVacancy = async (req, res, next) => {
 const deleteVacancy = async (req, res, next) => {
   try {
     const content = await SiteContent.findOne();
+    const vacancy = content.vacancies.id(req.params.vacancyId);
+    
+    // Delete image if exists
+    if (vacancy?.imageFileId) {
+      await imagekit.deleteFile(vacancy.imageFileId).catch(() => {});
+    }
+    
     content.vacancies.pull({ _id: req.params.vacancyId });
     await content.save();
     res.json({ message: 'Vacancy removed' });
@@ -391,6 +425,6 @@ module.exports = {
   getAllSchools, getSchool, verifySchool,
   toggleUserActive, createAdmin, getAllAdmins,
   getSiteContent, addSliderImage, deleteSliderImage,
-  addBanner, deleteBanner, updateStats, updateContactInfo,
+  updateStats, updateContactInfo,
   addVacancy, updateVacancy, deleteVacancy, getDashboardStats,
 };
